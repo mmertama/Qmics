@@ -1,0 +1,140 @@
+body{
+    font-family:"Arial";
+   /* position:absolute; */
+    background-color:Black;
+    color:White;
+    left:0;
+    top:0;
+}
+
+.click_item{
+ /*   background-color:DarkCyan;*/
+    border-color:Grey;
+    border:groove;
+    font-size: 25%;
+    color:White;
+    padding: 5px 5px;
+    margin-left: 10px;
+}
+
+
+.lib_item{
+    float:left;
+    width:33%;
+    height:300px;
+    
+}
+
+figure{
+    text-align:center;
+    width:90%;
+    height:90%;
+    background-color:#1C1C1C;
+}
+
+.bookcover{
+    margin-left:auto;
+    margin-right:auto;
+    display:block;
+}
+
+.seriestitle{
+    float:none;
+    clear:both;
+}
+
+.publisher{
+    clear:both;
+    float:none;
+}
+
+.normalflow{
+    clear:both;
+    float:none;
+}
+
+#current_position{
+    border:dotted;
+    border-color:DarkGrey;
+    border-width:3px; 
+    
+}
+
+#index{
+    display:none;
+    position:fixed;
+    font-family:"Arial";
+    border-radius: 20px;
+    border-style:outset;
+    padding-left:20px;
+    padding-bottom:20px;
+    z-index: 3;
+    left:50%;
+    width:50%;
+    max-height:480px;
+    top:50%;
+    margin-top: -15%;
+    margin-left: -20%;
+    background-color: #a3a3a3;
+    border-color:Silver;
+    font-weight:bolder; 
+    vertical-align: middle;
+    opacity:0.9;
+}
+
+.scrollbox{
+    overflow-y:auto;
+    overflow-x:hidden;
+    width:95%;
+    max-height:400px;
+}
+
+#index a:link {text-decoration:none;}
+#index a:visited {text-decoration:none;}
+#index a:hover {text-decoration:underline;}
+#index a:active {text-decoration:none;}
+
+
+.title_index{
+    font-size:smaller;
+    text-indent:50px;
+}
+.publisher_index{
+    font-size:normal;
+}
+
+.clear{
+    clear:both;
+}
+
+#topmenu{
+    width:100%;
+    border-style:ridge;
+    border-color:Grey;
+    background-color:Black;
+    float:left;
+    padding-top:30px;
+    padding-bottom:30px;
+    
+}
+
+#topmenu a:link {text-decoration:none; color:White;}
+#topmenu a:visited {text-decoration:none; color:White;}
+#topmenu a:hover {text-decoration:underline; color:White;}
+#topmenu a:active {text-decoration:none; color:White;}
+
+
+.topmenu_item{
+    width:30%;
+    font-size:large;
+    margin: 10px 50px 10px 10px;
+    padding: 10px 10px;
+    color:White;
+    background-color:#1C1C1C;
+    border-style:groove;
+    border-color:Grey;
+}
+
+.pages{
+    font-size:small;
+}

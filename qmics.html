@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html>
+	<head>
+	<meta charset="utf-8">
+	<!--meta name="viewport" content="width=device-width,user-scalable=no"-->
+	<link rel="stylesheet" type="text/css" href="style/login.css">
+    </head>
+    <script type="text/javascript">
+        function getRemember(){
+            if(typeof(Storage)==="undefined"){
+                return;
+            }
+            console.log("tr");
+            if(localStorage.hasOwnProperty("userData") ){
+                document.getElementsById("uid").value = localStorage.getItem("userData");
+            }
+        }
+        function setRemember(){
+        }
+    </script>
+    <body onload="getRemember()">
+    <div class = "login">
+	   <form id="loginform" name="input" action="script/qmics_db.php" method="get" onsubmit="setRemember()">
+	       <input type="hidden" name="action" value="library" />
+	       <div>Username:</div> <input id="uid" type="text" name="user" value=""/>
+	       <div>Password:</div> <input id="pid" type="password" name="pass" value=""/>
+	       <input id ="btn" type="submit" value="Enter"/>
+        </form>
+    </div>
+	</body>
+</html>
