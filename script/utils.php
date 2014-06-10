@@ -217,9 +217,11 @@ function fatal($str){
 
 
 function debug_log($string){
-    $date = new DateTime();
-    $timestamp = $date->format('Y/m/d H:i:s');
-    file_put_contents("../log.txt", "$timestamp $string\n" ,FILE_APPEND);
+    if(DEBUG_LOG){
+        $date = new DateTime();
+        $timestamp = $date->format('Y/m/d H:i:s');
+        file_put_contents("../log.txt", "$timestamp $string\n" ,FILE_APPEND);
+    }
 }
 
 function debug_table($db, $table){

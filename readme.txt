@@ -3,6 +3,7 @@ Qmics comic book reader
 
 I needed a Comic book reader for a Windows Phone. I wrote already one for Symbian and Meego using Qt, but this time I needed more generic. I also wanted same application run on my iPad and Android TV - and keep library and current comic in sync. Therefore I rejected all C# etc. propiertary solutions and went to web application. 
 
+
 This Qmics book reader let read comics with any device that runs HTML5 - but it needs a server. The server has to have pretty recent version of PHP and MariaDB / MySql and having UnRar and Unzip installed.
 
 Usage: 
@@ -58,7 +59,11 @@ After copied all files from repository to web server - open script/configure.php
     * define('WARNINGS_FATAL', false);
         -stops processing to first warning
         
-        
+
+The server is so far tested only with Synology Diskstation - but is smoke tested e.g. with Windows Phone 8, iPhone/iPad iOS7, Android 4.x WebTV, pad and Samsung Galaxy S3, IE9 and Chrorome on Windows 7 and Windows 8, Safari, Chrome, Firefox on OSX, Chrome, Firefox on Linux Mint.
+
+
+
         
 
 

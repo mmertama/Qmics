@@ -48,4 +48,5 @@ define('DB_ADDRESS', 'localhost');
 define('DB_USER', 'qmics');
 define('DB_PASSWD', 'qmicspasswd');
 define('WARNINGS_FATAL', false);
+define('DEBUG_LOG', false);
 ?>
