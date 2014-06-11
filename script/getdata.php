@@ -135,7 +135,7 @@ function getAccess($db, $userId){
 	while($comicIds = $comicIdQuery->fetch_array(MYSQLI_ASSOC)){
         $data = pack("NN", $comicIds['uniqcomicid'], $comicIds['access']);
         echo $data;
-       debug_log("$userId id:".$comicIds['uniqcomicid']." - a:".$comicIds['access']);
+        debug_log("$userId id:".$comicIds['uniqcomicid']." - a:".$comicIds['access']);
     }
     ob_flush();
     $comicIdQuery->close();

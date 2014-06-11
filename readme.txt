@@ -1,19 +1,33 @@
 Qmics comic book reader
     Copyright 2014 Markus Mertama markus.mertama @ gmail.com 
+    https://github.com/mmertama/Qmics
+    
 
 I needed a Comic book reader for a Windows Phone. I wrote already one for Symbian and Meego using Qt, but this time I needed more generic. I also wanted same application run on my iPad and Android TV - and keep library and current comic in sync. Therefore I rejected all C# etc. propiertary solutions and went to web application. 
 
 
 This Qmics book reader let read comics with any device that runs HTML5 - but it needs a server. The server has to have pretty recent version of PHP and MariaDB / MySql and having UnRar and Unzip installed.
 
-Usage: 
-It is important to have a proper folder structure: If the library folder is myprivate_library, the first folder is "publisher" and the next ones makes title. e.g.
+Install:
+
+Qmics has two folders: Qmics application folder and a library folder. The application folder is created when Qmics content is copied into web server and that defines URL of of the library, e.g. if Qmics is copied in the server www.foo.com and its web folder Qmics, the login page URL is http://www.foo.com/Qmics/qmics.html. Web server has to have a read access to all files in the folder. 
+Library is the folder from where data is read. If caches are in the same folder also web server write access is needed. It may be feasible to prevent HTTP access to that folder (e.g. using .htaccess file). 
+
+Copy all comics archive files in that folder:
+
+It is important to have a proper folder structure. It is assumed that each of the archive is stored under certain folder hierarchy: The publisher / title. e.g.
     
-        myprivate_library/Narvel/Spederman/Hidden Wars/hidden_wars_1.cbr. That generates library item "Narvel" "Spederman Hidden Wars" and all comic folders under that can be found under that title.
+        myprivate_library/Narvel/Spederman/Hidden Wars/hidden_wars_1.cbr
+        myprivate_library/Narvel/Spederman/Hidden Wars/hidden_wars_2.cbr
+        myprivate_library/Narvel/Spederman/Hidden Wars/hidden_wars_3.cbr
         
+That generates library item where publisher is "Narvel" and title "Spederman Hidden Wars" and each archive can be found under that.
+       
 When logging first time as an "admin" the given password is set as a admin password, that, as any password can be changed from the settings page.        
 
-Install:
+
+Configuration:
+
 After copied all files from repository to web server - open script/configure.php 
 
     * define('LIBRARY', "../../myprivate_library");
@@ -57,8 +71,24 @@ After copied all files from repository to web server - open script/configure.php
         -db password
         
     * define('WARNINGS_FATAL', false);
-        -stops processing to first warning
+        -stops processing at the first warning
         
+    * define('DEBUG_LOG', false);
+        -defines folder to write debug log (developer can add debug_log(string) functions)
+
+
+Settings:
+
+When logged as an "admin" the Settings (login -> Library -> Settings) 
+* "User properties"
+    Filters helps adjust individual settings. 
+    Each comic read and download access can be set invidually by ticking boxes and submitting.
+
+* User management: "Add User", "Change password" and "Delete user".
+
+* "Generate Comics DB" - when ever archive files are changed (add / deleted / moved) the DB must be regenerated. The user access values shall be preserved.
+
+* "Clear Caches" - After cover size all cover pages has to be regenerated and caches emptied.
 
 The server is so far tested only with Synology Diskstation - but is smoke tested e.g. with Windows Phone 8, iPhone/iPad iOS7, Android 4.x WebTV, pad and Samsung Galaxy S3, IE9 and Chrorome on Windows 7 and Windows 8, Safari, Chrome, Firefox on OSX, Chrome, Firefox on Linux Mint.
 

@@ -192,6 +192,7 @@ function warnIfFalse($mixed, $str, $cleanup = NULL){
 }
 
 function warn($str){
+    debug_log("warning: $str");
     $date = new DateTime();
     $timestamp = $date->format('Y/m/d H:i:s');
     
@@ -217,10 +218,10 @@ function fatal($str){
 
 
 function debug_log($string){
-    if(DEBUG_LOG){
+    if(false != DEBUG_LOG){
         $date = new DateTime();
         $timestamp = $date->format('Y/m/d H:i:s');
-        file_put_contents("../log.txt", "$timestamp $string\n" ,FILE_APPEND);
+        file_put_contents(DEBUG_LOG, "$timestamp $string\n" ,FILE_APPEND);
     }
 }
 

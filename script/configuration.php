@@ -22,7 +22,7 @@
 /*DESCRIPTION********************************************************************
 
 configuration.php 
-    Qmics general settins for installer
+    Qmics general settings
 
 Known issues: 
 *None
