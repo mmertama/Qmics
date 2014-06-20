@@ -1,12 +1,13 @@
-Qmics comic book reader
-    Copyright 2014 Markus Mertama markus.mertama @ gmail.com 
-    https://github.com/mmertama/Qmics
+Qmics - comic book reader server
+
+Copyright 2014 Markus Mertama markus.mertama @ gmail.com 
+https://github.com/mmertama/Qmics
     
+Generic comic book reader for all platforms that HTML5 capable web browser; PCs, Smart TVs, Android, iOS, Windowses etc. 
 
 I needed a Comic book reader for a Windows Phone. I wrote already one for Symbian and Meego using Qt, but this time I needed more generic. I also wanted same application run on my iPad and Android TV - and keep library and current comic in sync. Therefore I rejected all C# etc. propiertary solutions and went to web application. 
 
-
-This Qmics book reader let read comics with any device that runs HTML5 - but it needs a server. The server has to have pretty recent version of PHP and MariaDB / MySql and having UnRar and Unzip installed.
+This Qmics book reader let read comics with any device that runs HTML5 - but it needs a web server. It has been developed on Apache. The server has to have pretty recent version of PHP and MariaDB / MySql and having UnRar and Unzip installed.
 
 Install:
 
