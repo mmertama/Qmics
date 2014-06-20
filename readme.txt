@@ -1,15 +1,17 @@
-Qmics - comic book reader server
+Qmics - comic book reader and server
 
 Copyright 2014 Markus Mertama markus.mertama @ gmail.com 
 https://github.com/mmertama/Qmics
     
-Generic comic book reader for all platforms that HTML5 capable web browser; PCs, Smart TVs, Android, iOS, Windowses etc. 
+Generic comic book reader for all platforms that have a HTML5 capable web browser; PCs, Smart TVs, Android, iOS, Windowses etc. 
 
-I needed a Comic book reader for a Windows Phone. I wrote already one for Symbian and Meego using Qt, but this time I needed more generic. I also wanted same application run on my iPad and Android TV - and keep library and current comic in sync. Therefore I rejected all C# etc. propiertary solutions and went to web application. 
+I needed a Comic book reader for a Windows Phone. Long a ago I implemented one for Symbian and Meego, using Qt, but this time I wished a more generic solution. I also wanted the same application run on my iPad and Android TV, and keep library and the currently read comic in sync. Therefore I abandoned propiertary solutions and chose to do a web application. 
 
-This Qmics book reader let read comics with any device that runs HTML5 - but it needs a web server. It has been developed on Apache. The server has to have pretty recent version of PHP and MariaDB / MySql and having UnRar and Unzip installed.
+The Qmics book reader let user to read comics with any device that runs HTML5, it consists of client side Javascript and server side PHP parts. It has been developed on Apache. The server has to have pretty recent version of PHP and MariaDB / MySql and having UnRar and Unzip installed. The Javascript I quite compliant with all major browsers, but maybe now I  would consider jQuery. 
 
 Install:
+
+Nothing has to be installed in client (the reading device) - just open a browser. The server side installation needs scripts and library files in the correct locations.
 
 Qmics has two folders: Qmics application folder and a library folder. The application folder is created when Qmics content is copied into web server and that defines URL of of the library, e.g. if Qmics is copied in the server www.foo.com and its web folder Qmics, the login page URL is http://www.foo.com/Qmics/qmics.html. Web server has to have a read access to all files in the folder. 
 Library is the folder from where data is read. If caches are in the same folder also web server write access is needed. It may be feasible to prevent HTTP access to that folder (e.g. using .htaccess file). 
