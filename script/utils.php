@@ -45,11 +45,22 @@ function utilError(){
     return $utilError;
 }
 
+/*
+function hasTable($db, $table) {
+  $res = $db->query("SHOW TABLES LIKE `" . $table . "`");
+  return $res != false && $res->num_rows > 0;
+}
+*/
+
 function hasUsers($db){
+//	if(!hasTable($db, 'userdata'))
+//		return false;
     $usersSelect = $db->query("SELECT `username` FROM `userdata`");
-    $r = $usersSelect != false;
+    if($usersSelect == FALSE){
+    	return false;
+    }
     $usersSelect->close();
-    return $r;
+    return true;
 }
 
 function getFileNames(&$files, $dir, $match = FN_MATCHALL, $type = FN_FILES){

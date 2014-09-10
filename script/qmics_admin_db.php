@@ -145,6 +145,11 @@ function positionOf($uid, $array){
     return -1;
 }
    
+function addUser($db, $user, $password){
+	if(createNewUser($db, $user, $password))
+		createLinks($db);
+	}   
+   
 function doAdminUpdate($db, $userId, $values){
     $uu = unpack("C*", base64_decode($values));
     $update = array();
@@ -242,33 +247,7 @@ function clearCaches($db){
     regenComics($db);
     }
 
-function addUser($db, $user, $password){
-    
-	$exitTest = $db->query("SELECT `userid` FROM `userdata` WHERE `username`='$user'");
-	fatalIfFalse($exitTest, $db->error);
-    
-    $result = $exitTest->fetch_array(MYSQL_ASSOC);
-    
-    if($result != FALSE || count($result) > 0){ 
-		echo("user already exists<BR>");
-        return FALSE;
-		} 
-    
-	$exitTest->close();
-    
-    if(strlen($password) < MIN_PASSWORDLEN){
-        warn("Invalid password, password not changed");
-        return FALSE;
-    }
-	
-    $hash = password_hash($password, PASSWORD_DEFAULT);
-    $q1 = "INSERT INTO userdata (`username`,`pass`) VALUES ('$user', '$hash')";
-    $res = $db->query($q1);
-    fatalIfFalse($res, "Cannot add user " . $db->error);
-    createLinks($db);
-    echo "user added</br>";
-	return TRUE;
-}
+
 
 function modifyUser($db, $user, $password = -1){
 	$exitTest = $db->query("SELECT `userid` FROM `userdata` WHERE `username`='$user'");

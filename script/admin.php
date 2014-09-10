@@ -83,6 +83,36 @@ function validateUser($db, $user, $pass){
     return $userId;
 }
 
+function createNewUser($db, $user, $password){
+    
+	$exitTest = $db->query("SELECT `userid` FROM `userdata` WHERE `username`='$user'");
+	fatalIfFalse($exitTest, $db->error);
+    
+    $result = $exitTest->fetch_array(MYSQL_ASSOC);
+    
+    if($result != FALSE || count($result) > 0){ 
+		echo("user already exists<BR>");
+        return FALSE;
+		} 
+    
+	$exitTest->close();
+    
+    if(strlen($password) < MIN_PASSWORDLEN){
+        warn("Invalid password, password not changed");
+        return FALSE;
+    }
+	
+    $hash = password_hash($password, PASSWORD_DEFAULT);
+    $q1 = "INSERT INTO userdata (`username`,`pass`) VALUES ('$user', '$hash')";
+    $res = $db->query($q1);
+    fatalIfFalse($res, "Cannot add user " . $db->error);
+    echo "user added</br>";
+	return TRUE;
+}
+
+
+
+
 /*
 function ensureAdminExists(){
     $usersSelect = $db->query("SELECT `username` FROM `userdata`");

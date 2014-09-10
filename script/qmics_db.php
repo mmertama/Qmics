@@ -60,6 +60,7 @@ Known issues:
 *DESCRIPTION*********************************************************************/ 
 
 
+
 require_once 'utils.php';
 require_once 'admin.php';
 require_once 'getdata.php';
@@ -69,7 +70,6 @@ require_once 'configuration.php';
  if(!session_start()){
      fatal("No session started<BR/>");
  }
-
 
 $db = openDb();
 if(!$db){
@@ -90,7 +90,9 @@ if($user == 'admin'){
         if(!(isset($_GET['pass'])))
             fatal("No password");
         createUserTable($db);
-        addUser($db, 'admin', $_GET['pass']);
+        if(!createNewUser($db, 'admin', $_GET['pass'])){
+        	fatal("add admin failed!");
+        	}
         warn("admin added\n");
         createComicDb($db);
         createComicUserTable($db);
