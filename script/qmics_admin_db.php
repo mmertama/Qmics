@@ -106,6 +106,9 @@ if($adminId){
         $data = preg_split('/\|/', $_POST['recoveries']);
         recover($data);
     }
+    elseif(isset($_POST['action']) && $_POST['action'] == 'upload'){
+         uploadFiles($db, $_POST['publisher'], $_POST['title'], $_FILES['files']);
+    }
     else{
         $preset = isset($_GET['target']) ? $_GET['target'] : "";
         generateAdminSettingPage($db, $preset);
@@ -215,12 +218,26 @@ function generateAdminSettingPage($db, $preset){
     addForm("admin", "Delete user", $deleteUser, "deleteuser", $hidden);
     addForm("admin", "Generate Comics DB", NULL, "gencomicsdb", $hidden);
     addForm("admin", "Clear Caches", NULL, "clearcaches", $hidden);
+    
+    $upload = array("Publisher", "publisher", "Title", "title");
+    $extra = array("File", "type=\"file\"", "id=\"file\"", "name=\"files[]\"", "multiple=\"multiple\"", "accept=\".zip,.rar,.cbr,.cbz\"");
+    $info = "Please note that your server configuration may set limits to HTTP upload (e.g. 5MB), but you can always use e.g. SMB to directly access the library, please see readme.txt" ;
+    addFormExtra("admin", "Upload", $upload, "upload", $hidden, $info, "enctype=\"multipart/form-data\"", $extra);
+	
 }
 
 function addForm($user, $title, $fields, $action, $hidden){
+     addFormExtra($user, $title, $fields, $action, $hidden, NULL, NULL, NULL);
+}
+function addFormExtra($user, $title, $fields, $action, $hidden, $info, $param, $extra){
     echo "<div class=\"settingform\">\n";
     echo "<h3>$title</h3>\n";
-    echo "<form action=\"qmics_admin_db.php\" method=\"post\">\n";
+    if(!is_null($info))
+        echo "<div class=\"forminfo\">" . $info . "</div>";
+    echo "<form action=\"qmics_admin_db.php\" method=\"post\"";
+    if(!is_null($param))
+        echo $param;
+    echo ">\n";
     echo "<input hidden name = \"action\" value=\"$action\">\n";
     echo("<input type=\"hidden\" name=\"user\" value=\"$user\">\n");
     if(!is_null($hidden)){
@@ -230,10 +247,18 @@ function addForm($user, $title, $fields, $action, $hidden){
     }
     if(!is_null($fields)){
         for($i = 0; $i < count($fields); $i +=2){
-            echo $fields[$i] . ":";
+            echo "<label>" . $fields[$i] . ":</label>";
             if($fields[$i + 1] != null)
-                echo "<input type=\"text\" name=\"" . $fields[$i + 1] . "\" />\n";  
+                echo "<input type=\"text\" name=\"" . $fields[$i + 1] . "\" /><br/>\n";  
         }
+    }
+    if(!is_null($extra)){
+        echo "<label>" . $extra[0] . ":</label>";
+        echo "<input ";
+        for($i = 1; $i < count($extra); $i+=1){
+            echo $extra[$i] . " ";
+        }
+        echo "><br/>\n";
     }
     echo "<input type=\"submit\" value=\"$title\" />\n";
     echo "</form>\n</div>\n";
@@ -595,7 +620,35 @@ function fixfile($filename){
         } 
 }
 
+function uploadFiles($db, $publisher, $title, $files){
+    fatalIfFalse($publisher != NULL && strlen($publisher) > 0, "Error - Publisher not given");
+    fatalIfFalse($title != NULL && strlen($title) > 0, "Error - Title not given");
+    fatalIfFalse($files != NULL && count($files) > 0, "Error - Files not given");
+    $extensions = array("zip", "rar", "cbz", "cbr");
+    $count = 0; 
+    $path = LIBRARY . "/" . $publisher . "/" . $title . "/";
+    if(!is_dir($path)){
+    	fatalIfFalse(mkdir($path, 0777, TRUE), "Cannot create path " . $path);
+    	}
+    foreach($files['name'] as $f => $name){
+        if($files['error'][$f] != 0){
+            warn("File ". $name . " upload error:" . $files['error'][$f]);
+        }
+        elseif(!in_array(pathinfo(strtolower($name), PATHINFO_EXTENSION), $extensions) ){
+			warn("File " .$name . " is not supported");
+        }
+        else{
+            if(move_uploaded_file($files["tmp_name"][$f], $path.$name))
+	            $count++; // Number of successfully uploaded file
+        }
+    }
+    if($count > 0)
+        htmlEcho ("$count files updated, please update the database.<br/>");
+    else
+        htmlEcho ("No files uploaded.<br/>");
+}
     
 ?>
+
 </body>
 </html>
