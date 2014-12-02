@@ -5,7 +5,7 @@ https://github.com/mmertama/Qmics
     
 Generic comic book reader for all platforms that have a HTML5 capable web browser; PCs, Smart TVs, Android, iOS, Windowses etc. 
 
-I needed a Comic book reader for a Windows Phone. Long a ago I implemented one for Symbian and Meego, using Qt, but this time I wished a more generic solution. I also wanted the same application run on my iPad and Android TV, and keep library and the currently read comic in sync. Therefore I abandoned propiertary solutions and chose to do a web application. 
+I needed a Comic book reader for a Windows Phone. Long ago I implemented one for Symbian and Meego using Qt (may still be available at Ovi/Opera Store), but this time I wished a more generic solution. I also wanted the same application run on my iPad and Android TV, and keep library and the currently read comic in sync. Therefore I abandoned propiertary solutions and chose to do a web application. 
 
 The Qmics book reader let user to read comics with any device that runs HTML5, it consists of client side Javascript and server side PHP parts. It has been developed on Apache. The server has to have pretty recent version of PHP and MariaDB / MySql and having UnRar and Unzip installed. The Javascript I quite compliant with all major browsers, but maybe now I  would consider jQuery. 
 
