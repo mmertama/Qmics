@@ -67,7 +67,7 @@ if(!isset($_GET['user']) || strlen($_GET['user']) == 0)
 $user = $_GET['user'];
 
 
-$pw = isset($_GET['pass']) ? $_GET['pass'] : "";
+$pw = /*isset($_GET['pass']) ? $_GET['pass'] :*/ "";
 $userId = validateUser($db, $user, $pw);
 
 if(!$userId){

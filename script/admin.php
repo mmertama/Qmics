@@ -43,6 +43,7 @@ require_once "configuration.php";
 require_once "logutils.php";
 
 function rejectUser($db, $user){
+	debug_log("invalid login: $user");
     addLogEvent($db, "$user", 'login-fail', 0, $_SERVER["REMOTE_ADDR"]);
     $db->close();
     session_destroy();
@@ -134,12 +135,13 @@ function ensureAdminExists(){
 function openDb(){
     $db = mysqli_connect(DB_ADDRESS, DB_USER, DB_PASSWD);
 	if (mysqli_connect_errno()) {
-        fatal ("Connection failed:" . mysqli_connect_error());
+        warn ("Connection failed:" . mysqli_connect_error());
+		$db = FALSE;
     }
-    if(!$db->query("CREATE DATABASE IF NOT EXISTS `Qmics`;")){
+    if($db && !$db->query("CREATE DATABASE IF NOT EXISTS `Qmics`;")){
         fatal ("DB failed:" . mysqli_connect_error());
     }
-    if(!$db->select_db("Qmics")){
+    if($db && !$db->select_db("Qmics")){
         fatal ("DB failed:" . $db->error);
     } 
     return $db;
@@ -186,5 +188,66 @@ function createComicDb($db){
     fatalIfFalse($res, "Table \'comics\' creation failed:" . $db->error);
     echo "comics table created<br/>\n";
 }
+
+
+function getCacheSize($db){
+	$res = $db->query("SELECT `cachesize` FROM `comicsDB`");
+	fatalIfFalse("Cache size failed:" . $db->error);
+	$data = $res->fetch_array(MYSQLI_ASSOC);
+    $size = $data['cachesize'];
+	$res->close();
+	return $size < 0 ? $size : "Unknown";
+}
+
+
+function getMaxCacheSize($db){
+	$res = $db->query("SELECT `maxcachesize` FROM `comicsDB`");
+	fatalIfFalse($res, "Maxcache size failed:" . $db->error);
+	$data = $res->fetch_array(MYSQLI_ASSOC);
+	$size = $data['maxcachesize'];
+	$res->close();
+	return $size;
+}
+
+function setCacheMaxSize($db, $maxSz){
+	$query = "UPDATE `comicsDB` SET `maxcachesize` = '$maxSz'";
+	$res = query($query);
+	fatalIfFalse("Cache size failed:" . $db->error);
+	$currentSize = getCacheSize($db);
+	if($currentSize > $maxSz){
+		$sz = setFolderSize(CURRENT_CACHE, $maxSz * 0.9);
+		echo "Cache size set to $sz<br/>\n";
+		$res = $db->query("UPDATE `comicsDB` SET `cachesize` = '$sz'");
+	}
+	fatalIfFalse($res, "Cache size set failed:" . $db->error);
+    echo "Cache size max set to $maxSz<br/>\n";
+}
+
+function ensureComicsDB($db, $mb, $maxSz){
+	$res = $db->query("SELECT `maxcachesize` FROM `comicsDB`");
+	if($res == FALSE){
+		$db->query("DROP TABLE IF EXISTS `comicsDB`");
+		$res = $db->query("
+			CREATE TABLE `comicsDB`(
+			`cachesize` BIGINT NOT NULL,
+			`maxcachesize` BIGINT NOT NULL
+			)");
+		fatalIfFalse($res, "Table \'comicsDB\' creation failed:" . $db->error);
+		$query = "INSERT INTO `comicsDB` (`cachesize`, `maxcachesize`) VALUES ('$mb', '$maxSz')";
+		$res = $db->query($query);
+		fatalIfFalse($res, "comicDB update error ". $db->error);
+	}
+	else{
+	$res->close();
+	}
+}
+
+function calcCacheSize($db){
+	$size = calcFolderSize(CURRENT_CACHE);
+	$query = "UPDATE `comicsDB` SET `cachesize` = '$size'";
+	$res = $db->query($query);
+	fatalIfFalse($res, $db->error);	
+	echo "comics cache size is $size bytes <br/>\n";
+	}
 
 ?>

@@ -20,12 +20,15 @@
     </script>
     <body onload="getRemember()">
     <div class = "login">
-	   <form id="loginform" name="input" action="script/qmics_db.php" method="get" onsubmit="setRemember()">
+	   <form id="loginform" name="input" action="script/entry.php" method="post" onsubmit="setRemember()">
 	       <input type="hidden" name="action" value="library" />
 	       <div>Username:</div> <input id="uid" type="text" name="user" value=""/>
 	       <div>Password:</div> <input id="pid" type="password" name="pass" value=""/>
 	       <input id ="btn" type="submit" value="Enter"/>
         </form>
     </div>
+	<div id="versionInfo">
+	Version  2.150127
+	</div>
 	</body>
 </html>

@@ -82,6 +82,7 @@ function extractTo($filename, $index, $outfolder, $commands, $force = FALSE){
     global $defErr;
     $deflateArchive = "";
     $fullname = "";
+	$cached = true;
     
     if(!file_exists($filename)){
         $defErr = "File not found: $filename";
@@ -115,7 +116,7 @@ function extractTo($filename, $index, $outfolder, $commands, $force = FALSE){
         }
         sort($jpgs);
         $fullname = "$outfolder/" . $jpgs[$index];
-        if($force){
+        if($force && file_exists($fullname)){
             if(!unlink($fullname)){
                  $defErr = "Cannot delete $fullname";
                  return FALSE;
@@ -124,10 +125,9 @@ function extractTo($filename, $index, $outfolder, $commands, $force = FALSE){
                 
         if(!file_exists($fullname) && count($outfolder) > 0){
             $jpgname = $jpgs[$index]; 
-            fatalIfFalse($jpgname, "unfortinate error at " . $jpgs[$index]);
+            fatalIfFalse($jpgname, "unfortunate error at " . $jpgs[$index]);
             $first = " \"$jpgname\" ";
             $deflateArchive = $commands['preexract'] . $first . $commands['postexract'] . " 2>&1 ";
-
             unset($output);
         }
     }
@@ -152,8 +152,9 @@ function extractTo($filename, $index, $outfolder, $commands, $force = FALSE){
         }
         if($index < 0)
             return file_exists($outfolder);
+		$cached = false;
     }
-     return array('fullname' => $fullname, 'pages' => count($jpgs));   
+     return array('fullname' => $fullname, 'pages' => count($jpgs), 'cached' => $cached);   
 }
 
 

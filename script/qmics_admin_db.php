@@ -109,19 +109,40 @@ if($adminId){
     elseif(isset($_POST['action']) && $_POST['action'] == 'upload'){
          uploadFiles($db, $_POST['publisher'], $_POST['title'], $_FILES['files']);
     }
+	elseif(isset($_POST['action']) && $_POST['action'] == 'updatecachesize'){
+		calcCacheSize($db);
+	}
+	elseif(isset($_POST['action']) && $_POST['action'] == 'maxcache'){
+		setCacheMaxSize($db, $_POST['maxcache']);
+	}
+	elseif(isset($_POST['action']) && $_POST['action'] == 'configsettings'){
+		configureFromSettings($db);
+	}
+	elseif(isset($_POST['action']) && $_POST['action'] == 'comicsize'){
+		setMaxPageSize($db, $userId, $_POST['comicsize']);
+	}
     else{
         $preset = isset($_GET['target']) ? $_GET['target'] : "";
-        generateAdminSettingPage($db, $preset);
+        generateAdminSettingPage($db, $userId, $preset);
         }
 }else{
     if(isset($_POST['action']) && $_POST['action'] == 'modifyuser'){
-        modifyUser($db, $user, $_POST['npass']);
+        if(strcasecmp($user, "guest") != 0)
+			modifyUser($db, $user, $_POST['npass']);
+		else
+			htmlEcho("Not allowed for guest");
         }
     elseif(isset($_POST['action']) && $_POST['action'] == 'deleteuser'){
-        modifyUser($db, $user);
+        if(strcasecmp($user, "guest") != 0) 
+			modifyUser($db, $user);
+		else
+			htmlEcho("Not allowed for guest");
         }
+	elseif(isset($_POST['action']) && $_POST['action'] == 'comicsize'){
+		setMaxPageSize($db, $userId, $_POST['comicsize']);
+	}
     else{
-        generateUserSettingPage($db, $user);
+        generateUserSettingPage($db, $user, $userId);
         }
 }
 
@@ -201,33 +222,42 @@ function doAdminUpdate($db, $userId, $values){
     $comicUserResult->close();
 }
 
-function generateUserSettingPage($db, $user){
+function generateUserSettingPage($db, $user, $userId){
     $password = array("Password", "npass");
-    $hidden = array($user, "user");
-    addForm($user, "Change password", $password, "modifyuser", $hidden);
-    addForm($user, "Delete account", NULL, "deleteuser", $hidden);
+	generateSizeRequest($db, $user, $userId);
+    addForm($user, "Change password", $password, "modifyuser");
+    addForm($user, "Delete account", NULL, "deleteuser");
 }
 
-function generateAdminSettingPage($db, $preset){
-    generateAdminTable($db, $preset);
-    $hidden = array("admin", "user");
+function generateAdminSettingPage($db, $userId, $preset){
     $addUser = array("Username", "nuser", "Password", "npass");
     $deleteUser = array("Username", "nuser");
-    addForm("admin", "Add user", $addUser, "adduser", $hidden);
-    addForm("admin", "Change password", $addUser, "modifyuser", $hidden);
-    addForm("admin", "Delete user", $deleteUser, "deleteuser", $hidden);
-    addForm("admin", "Generate Comics DB", NULL, "gencomicsdb", $hidden);
-    addForm("admin", "Clear Caches", NULL, "clearcaches", $hidden);
+	addForm("admin", "Configure", NULL, "configsettings");
+	generateSizeRequest($db, "admin", $userId);
+	
+    addForm("admin", "Add user", $addUser, "adduser");
+    addForm("admin", "Change password", $addUser, "modifyuser");
+    addForm("admin", "Delete user", $deleteUser, "deleteuser");
+    addForm("admin", "Generate Comics DB", NULL, "gencomicsdb");
+    addForm("admin", "Clear Caches", NULL, "clearcaches");
+	
+	$gsize = toGB(getMaxCacheSize($db));
+	$maxRange[] = array("Size (GB)", "type=\"number\"", "value=\"". $gsize . "\"", "name=\"maxcache\"", "min=\"1\"", "max=\"" . CACHE_MAX_LIMIT ."\"");
+	addFormExtra("admin", "Set Max Cache", NULL, "maxcache", NULL, NULL, NULL, $maxRange);
+	$gsize = toGB(getCacheSize($db));
+	$info = "Current cache size is $gsize GB";
+	addFormExtra("admin", "Update Cache Size", NULL, "updatecachesize", NULL, $info, NULL, NULL);
     
     $upload = array("Publisher", "publisher", "Title", "title");
-    $extra = array("File", "type=\"file\"", "id=\"file\"", "name=\"files[]\"", "multiple=\"multiple\"", "accept=\".zip,.rar,.cbr,.cbz\"");
+    $extra[] = array("File", "type=\"file\"", "id=\"file\"", "name=\"files[]\"", "multiple=\"multiple\"", "accept=\".zip,.rar,.cbr,.cbz\"");
     $info = "Please note that your server configuration may set limits to HTTP upload (e.g. 5MB), but you can always use e.g. SMB to directly access the library, please see readme.txt" ;
-    addFormExtra("admin", "Upload", $upload, "upload", $hidden, $info, "enctype=\"multipart/form-data\"", $extra);
-	
+    addFormExtra("admin", "Upload", $upload, "upload", NULL, $info, "enctype=\"multipart/form-data\"", $extra);
+
+	generateAdminTable($db, $preset);	
 }
 
-function addForm($user, $title, $fields, $action, $hidden){
-     addFormExtra($user, $title, $fields, $action, $hidden, NULL, NULL, NULL);
+function addForm($user, $title, $fields, $action){
+     addFormExtra($user, $title, $fields, $action, NULL, NULL, NULL, NULL);
 }
 function addFormExtra($user, $title, $fields, $action, $hidden, $info, $param, $extra){
     echo "<div class=\"settingform\">\n";
@@ -253,13 +283,15 @@ function addFormExtra($user, $title, $fields, $action, $hidden, $info, $param, $
         }
     }
     if(!is_null($extra)){
-        echo "<label>" . $extra[0] . ":</label>";
-        echo "<input ";
-        for($i = 1; $i < count($extra); $i+=1){
-            echo $extra[$i] . " ";
-        }
-        echo "><br/>\n";
-    }
+		foreach ($extra as $input){
+			echo "<label>" . $input[0] . ":</label>";
+			echo "<input ";
+			for($i = 1; $i < count($input); $i+=1){
+				echo $input[$i] . " ";
+			}
+			echo "><br/>\n";
+		}
+	}
     echo "<input type=\"submit\" value=\"$title\" />\n";
     echo "</form>\n</div>\n";
 }
@@ -598,7 +630,12 @@ function recover($commands){
 function htmlEcho($str){
     echo preg_replace('/\n/', '</br>', $str);
 }
-    
+
+function configureFromSettings($db){
+	require_once('qmics_configure.php');
+	configure("Qmics Configuration", "configuration.php");
+	exit();
+}    
 
 function fixfile($filename){
     $folder = pathinfo($filename, PATHINFO_DIRNAME);
@@ -618,6 +655,42 @@ function fixfile($filename){
         $newname = substr($filename, 0, -strlen($ext)) . "zip";
         rename ($tempname, $newname);
         } 
+}
+function setMaxPageSize($db, $userId, $value){
+	$res = $db->query("UPDATE `userdata` SET `comicsize`='$value' WHERE `userid` = '$userId'");
+	fatalIfFalse($res, $db->error);
+	if($value > 0)
+		htmlEcho("Default page size is set to $value pixels");
+	else	
+		htmlEcho("Page size is set to maximum");
+}
+
+function generateSizeRequest($db, $user, $userId){
+	$sizes = array(640, 800, 1024, 1280, 1680, 1980, 2560, 0);
+	$current = 0;
+	$res = $db->query("SELECT `comicsize` FROM `userdata` WHERE `userid` = '$userId'");
+	if($res == FALSE){
+		$res = $db->query("ALTER TABLE `userdata` ADD `comicsize` INT NOT NULL");
+		$res = $db->query("INSERT INTO `userdata` (`comicsize`) VALUES ('$current')");
+		fatalIfFalse($res, $db->error);
+	}
+	else{
+		$current = $res->fetch_array(MYSQLI_ASSOC)['comicsize'];
+		$res->close();
+	}
+
+	$extra = array();
+	foreach ($sizes as $sz){
+		$name = $sz;
+		if($sz == 0)
+			$name = "Maximum";	
+		$info = array($name, "type=\"radio\"", "class=\"radio\"", "name=\"comicsize\", value=\"$sz\"");
+		if($sz == $current)
+			$info[] = "checked";
+		$extra[] = $info;
+		}
+	$info = "Set maximum size of the comic page. Smaller pages download faster. The value defines maximum edge of the page in pixels";
+	addFormExtra($user, "Set max size", NULL, "comicsize", NULL, $info, NULL, $extra);
 }
 
 function uploadFiles($db, $publisher, $title, $files){
@@ -647,6 +720,8 @@ function uploadFiles($db, $publisher, $title, $files){
     else
         htmlEcho ("No files uploaded.<br/>");
 }
+
+
     
 ?>
 

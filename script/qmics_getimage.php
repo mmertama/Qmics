@@ -60,6 +60,8 @@ if(!isset($_GET['action']))
 
 if(!isset($_GET['id']))
     fatal("no id");
+	
+//debug_log("action:" . $_GET['action']);	
 
 if($_GET['action'] == 'image'){
     getImage($db, $userId, $_GET['id']);
@@ -72,7 +74,8 @@ if($_GET['action'] == 'open'){
 if($_GET['action'] == 'page'){
     if(!isset($_GET['page']))
         fatal("no page");
-    getPage($db, $userId, $_GET['id'], $_GET['page']);
+	$requestedSize = getPageSize($db, $userId);
+    getPage($db, $userId, $_GET['id'], $_GET['page'], $requestedSize);
 }
 
 if($_GET['action'] == 'pagequery'){
@@ -83,4 +86,17 @@ if($_GET['action'] == 'pagequery'){
 
 if($_GET['action'] == 'access' && $user == "admin"){
     getAccess($db, $_GET['id']);
+	
+}
+
+                                                                                                              
+function getPageSize($db, $userId){
+	$res = $db->query("SELECT `comicsize` FROM `userdata` WHERE `userid` = '$userId'");
+	if($res == FALSE){
+		warn("page size failed");
+		return 0;
+	}
+	$sz = $res->fetch_array(MYSQLI_ASSOC)['comicsize'];
+	$res->close();
+	return intval($sz);
 }

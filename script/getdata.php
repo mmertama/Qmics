@@ -33,7 +33,8 @@ Known issues:
 
 require_once 'utils.php';
 require_once 'deflate.php';
-require_once "configuration.php";
+require_once 'configuration.php';
+require_once 'resize.php';
 
 
 function getImage($db, $userid, $id){
@@ -115,7 +116,7 @@ function getPageQuery($db, $userId, $comicId, $offset){
     flush(); 
     $data = "";
     if($comicData != null){
-        debug_log($comicData['usercomicid'] .",". $comicData['pagecount']);
+        debug_log("at getPageQuery " . $comicData['usercomicid'] .",". $comicData['pagecount']);
         $data = pack("NN", $comicData['usercomicid'], $comicData['pagecount']);
     }else{
          $data = pack("N", 0); 
@@ -135,7 +136,7 @@ function getAccess($db, $userId){
 	while($comicIds = $comicIdQuery->fetch_array(MYSQLI_ASSOC)){
         $data = pack("NN", $comicIds['uniqcomicid'], $comicIds['access']);
         echo $data;
-        debug_log("$userId id:".$comicIds['uniqcomicid']." - a:".$comicIds['access']);
+      //  debug_log("$userId id:".$comicIds['uniqcomicid']." - a:".$comicIds['access']);
     }
     ob_flush();
     $comicIdQuery->close();
@@ -204,13 +205,14 @@ function pageFrom($db, $userId, $comicId) {
     return $array;
 }
                     
-function getPage($db, $userId, $comicId, $pageIndex){
-    debug_log("get page $userId, $comicId, $pageIndex, $offset");
+function getPage($db, $userId, $comicId, $pageIndex, $requestedSize){
+    debug_log("get page $userId, $comicId, $pageIndex, $offset, $requestedSize");
+	
     checkCacheErase($db, $userId, $comicId);
     
-    $comicData = $comicData = pageFrom($db, $userId, $comicId);        
+    $comicData = pageFrom($db, $userId, $comicId);        
     
-    debug_log($comicdata['uniqcomicid'] + ":" + $comicdata['sourceurl'] +":"+ $comicdata['pagecount']);
+    debug_log($comicdata['uniqcomicid'] . ":" . $comicdata['sourceurl'] . ":" . $comicdata['pagecount'] . " - Requested size: $requestedSize");
     
     if($pageIndex < 0)
         $pageIndex = 0;
@@ -222,12 +224,29 @@ function getPage($db, $userId, $comicId, $pageIndex){
     $pathInfo = pathinfo($source);
     $archivepath = $pathInfo['filename'];
 
+	$targetFolder = CURRENT_CACHE;
+	if($requestedSize > 0){
+		$targetFolder = CURRENT_CACHE . "/_cache_" . $requestedSize;
+		 if(!file_exists($targetFolder)){
+			$err = mkdir($targetFolder, 0777, true);
+			fatalIfFalse($err, "Failed to create Cache folder");
+		}
+	}
+	
+	
     
-    $data = uncompress($source, CURRENT_CACHE ."/". $archivepath, $pageIndex);
+    $data = uncompress($source, $targetFolder ."/". $archivepath, $pageIndex);
     fatalIfFalse($data, compressError());
     
     $pageImage = $data['fullname'];
-    
+	
+	debug_log("get image: $pageImage, $requestedSize, " . $data['cached']);	
+		
+	if($requestedSize > 0 && !$data['cached']){
+		$rsz = resize($pageImage, $requestedSize, $requestedSize);
+		fatalIfFalse(rsz, "Resize error ($requestedSize) $pageImage: " . resizeError());
+	}
+	
     header("Content-Type: image/jpeg");
     ob_clean();
     flush(); 
@@ -238,6 +257,23 @@ function getPage($db, $userId, $comicId, $pageIndex){
     ob_flush();
 
     updatePages($db, $comicId, $pageIndex);
+}
+
+function cacheUpdate($db, $filename){
+	$res = $db->query("SELECT `cachesize`, `maxcacachesize` FROM `comicsDB`");
+	fatalIfFalse($res, $db->error);
+	$sizes = $res->fetch_array(MYSQLI_ASSOC);
+	$newSize = filesize($filename) + $sizes['cachesize'];
+	$maxSz = $sizes[maxcachesize];
+	$res->close();
+	if($newSize > $maxSz){
+		$sz = setFolderSize(CURRENT_CACHE, $maxSz * 0.9);
+		$res = $db->query("UPDATE `comicsDB` SET `cachesize` = '$sz'");
+	}
+	else{
+		$res = $db->query("UPDATE `comicsDB` SET `cachesize` = '$newSize'");
+		}
+	fatalIfFalse($res, "Cache size set failed:" . $db->error);
 }
 
 function getUserPage($db, $userId){

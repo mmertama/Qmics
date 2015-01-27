@@ -1,3 +1,16 @@
+<?php
+
+require_once 'utils.php';
+require_once 'admin.php';
+require_once 'getdata.php';
+require_once 'configuration.php';
+
+ if(!session_start()){
+     fatal("No session started<BR/>");
+ }
+
+?>
+
 <!DOCTYPE html>
 <html>
 	<head>
@@ -56,20 +69,21 @@ qmics_db.php
 
 Known issues: 
 * Why sometimes "current" comic is has been disappeared - there seems to be a bug somewhere?
+
+Changes 
+* $_GET changed to $_POST 
+
  
 *DESCRIPTION*********************************************************************/ 
 
 
 
-require_once 'utils.php';
-require_once 'admin.php';
-require_once 'getdata.php';
-require_once 'configuration.php';
 
 
- if(!session_start()){
-     fatal("No session started<BR/>");
- }
+
+if(!isset($_SESSION['pass'])){
+	fatal("Session error");
+}
 
 $db = openDb();
 if(!$db){
@@ -84,13 +98,13 @@ $user = $_GET['user'];
 $action = "";
 if(isset($_GET['action']))
     $action = $_GET['action'];
-
+/*
 if($user == 'admin'){
 	if(!hasUsers($db)){
-        if(!(isset($_GET['pass'])))
+        if(!(isset($_POST['pass'])))
             fatal("No password");
         createUserTable($db);
-        if(!createNewUser($db, 'admin', $_GET['pass'])){
+        if(!createNewUser($db, 'admin', $_POST['pass'])){
         	fatal("add admin failed!");
         	}
         warn("admin added\n");
@@ -99,13 +113,15 @@ if($user == 'admin'){
         createUserLogTable($db);
     }
 }
-
+*/
 
 //USER DB exists
-$pw = isset($_GET['pass']) ? $_GET['pass'] : "";
+$pw = /*isset($_POST['pass']) ? $_POST['pass'] :*/ "";
 $userId = validateUser($db, $user, $pw);
 if(!$userId){
-   rejectUser($db, $user);
+warn($_SESSION['pass']);
+  fatal("no pw:" . isset($_SESSION['pass']));
+  // rejectUser($db, $user);
    }
 //User Valid 
 
@@ -272,6 +288,7 @@ function createUserTable($db){
   `userid` INT NOT NULL AUTO_INCREMENT,
   `currentcomicid` INT NOT NULL,
   `currentcomicpage` INT NOT NULL,
+  `comicsize` INT NOT NULL DEFAULT 0,
    PRIMARY KEY(`userid`)
   )");
   

@@ -122,6 +122,48 @@ function erase($folder){
         warnIfFalse(rmdir($folder), "rmdir $folder");
 }
 
+function setFolderSize($folder, $size){
+		$files = array();
+		$res = getFileNames($files, $this->$folder);
+		exitIfFalse($res, utilError());
+		$data = array();
+		foreach($files as $fileName){
+			$time = fileatime($fileName);
+			if($time == FALSE)
+				$time = filemtime($fileName);
+			if($time == FALSE)
+				$time = filectime();
+			$data[$fileName] = $time($fileName);
+		}
+		arsort($data);
+		$size = 0;
+		foreach($data as $fileName => $time){
+			if($size > $this->$size){
+				unlink($fileName);
+				}
+			else{
+				$size += filesize($fileName);
+			}
+		}
+		return $size;
+	}
+
+function calcFolderSize($folder){
+ return GetDirectorySize($folder);
+}
+
+//see http://stackoverflow.com/questions/478121/php-get-directory-size
+function GetDirectorySize($path){
+    $bytestotal = 0;
+    $path = realpath($path);
+    if($path!==false){
+        foreach(new RecursiveIteratorIterator(new RecursiveDirectoryIterator($path, FilesystemIterator::SKIP_DOTS)) as $object){
+            $bytestotal += $object->getSize();
+        }
+    }
+    return $bytestotal;
+}
+
 /*
 function getTitle($path, $offset){
     $base = $path;
@@ -192,6 +234,14 @@ function fatalIfFalse($mixed, $str, $cleanup = NULL){
     return $mixed;
 }
 
+function toBytes($val){
+	return $val * 1024 * 1024;
+}
+
+function toGB($val){
+	return intval($val / (1024 * 1024));
+}
+
 function warnIfFalse($mixed, $str, $cleanup = NULL){
     if($mixed === false  || is_null($mixed) || 0 === $mixed){
         if($cleanup != NULL){
@@ -229,7 +279,7 @@ function fatal($str){
 
 
 function debug_log($string){
-    if(false != DEBUG_LOG){
+    if(false != DEBUG_LOG && strlen(DEBUG_LOG) > 0){
         $date = new DateTime();
         $timestamp = $date->format('Y/m/d H:i:s');
         file_put_contents(DEBUG_LOG, "$timestamp $string\n" ,FILE_APPEND);

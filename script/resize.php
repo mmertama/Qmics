@@ -31,6 +31,8 @@ Known issues:
 *DESCRIPTION*********************************************************************/ 
 
 require_once "configuration.php";
+require_once "utils.php";
+
 global $resizeError;
 
 
@@ -64,7 +66,6 @@ function resizeCopy($filename, &$newname, $width, $height) {
         $resizeError = "Cannot open image:\"$filename\"";
         return FALSE;
     }
-    
     $ratio1 = $width / $info[0];
     $ratio2 = $height / $info[1];
     $ratio = min($ratio1, $ratio2);
@@ -73,6 +74,8 @@ function resizeCopy($filename, &$newname, $width, $height) {
         return array('width' => $info[0], 'height' => $info[1]);
     }
     
+	//debug_log($info[0] . ":" . $info[1] . " $width:$height");
+	
     $image = NULL;
 	if($info[2] == IMAGETYPE_JPEG){
         $image = imagecreatefromjpeg($filename);
@@ -84,7 +87,6 @@ function resizeCopy($filename, &$newname, $width, $height) {
         $resizeError = "Cannot resize image:\"$filename\" (dump follows):" . implode("|", $info);
         return FALSE;
     }
-    
     $width = floor($ratio * $info[0]);  
     $height = floor($ratio * $info[1]);  
 	$newImage = imagecreatetruecolor($width, $height); 
