@@ -21,8 +21,8 @@
 *LICENSE*************************************************************************/
 /*DESCRIPTION********************************************************************
 
-configuration.php 
-    Qmics general settings
+configuration.php.template 
+    Qmics general settings, from this file it is generated 'configuration.php' via Qmics configuration functionality when configuration.php is missing, updated or certain error situations - or when admin selects "configure" from "Settings".
 
 Known issues: 
 *None
