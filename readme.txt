@@ -50,7 +50,7 @@ Configuration settings:
     
     * ZIPCMD - system path to zip command.
     
-    * UNZIPCMD - system path to unzip command.
+    * UNZIPCMD - system path to unzip or 7z command.
         
     * UNRARCMD - system path to unrar command.
     
