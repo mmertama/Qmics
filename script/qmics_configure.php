@@ -1,4 +1,3 @@
-
 	
 <?php
 
@@ -32,11 +31,16 @@ Known issues:
  
 *DESCRIPTION*********************************************************************/ 
 
+//ini_set('display_errors', 'On');
+ini_set('auto_detect_line_endings', true);
+//error_reporting(E_ALL | E_STRICT);  
+
 define('PATTERN','/\s*define\s*\(\s*\'\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\'\s*,\s*([^\)]+)\s*\)\s*;\s*\/\/\s*#([a-zA-Z0-9_]+)#?(.*)/'); //please dont use ')' in your strings :-)
 define('PATTERN_SHORT','/\s*define\s*\(\s*\'\s*([a-zA-Z_][a-zA-Z0-9_]*)\s*\'\s*,\s*([^\)]+)\s*\)\s*;/'); 
+define('TEMPLATE', 'configuration.php.template.txt');
 
 if(isset($_POST['action']) && $_POST['action'] == 'configure'){
-	$file = file_get_contents("configuration.php.template");
+	$file = file_get_contents(TEMPLATE);
 	if($file == FALSE)
 		return FALSE;
 	$lines = explode("\n", $file);
@@ -74,8 +78,14 @@ if($err == FALSE || $err == NULL){
 	}
 }
 
-function configure($reason, $oldVal){
+function configure($reason, $errors, $oldVal){
 	echo("<h3>" . $reason. "</h3><br/>\n");
+	if($errors){
+		echo("<ul>\n");
+		foreach ($errors as $err)
+			echo("<li>" . $err . "</li>");
+		echo("</ul>\n");
+	}
 	generateConfigurePage($oldVal);
 }
 
@@ -108,7 +118,7 @@ function parseConfigure($pat, $filename){
 }
 
 function generateConfigurePage($oldVal){
-	$data = parseConfigure(PATTERN, "configuration.php.template");
+	$data = parseConfigure(PATTERN, TEMPLATE);
 	dieIfError($data, "Cannot open configuration template");
 	
 	echo("<div class=\"settingform\">");
@@ -118,6 +128,7 @@ function generateConfigurePage($oldVal){
 	echo("</div><br/>\n");
     echo("<form action=\"qmics_configure.php\" method=\"post\">\n");
 	echo "<input hidden name = \"action\" value=\"configure\">\n";
+	
 	
 	if($oldVal != NULL){
 		$olddata = parseConfigure(PATTERN_SHORT, $oldVal);
@@ -136,6 +147,88 @@ function generateConfigurePage($oldVal){
 	echo("</form>");
 	echo("</div>");
 }
+
+
+function validateConfiguration($conf){
+	$ok = true;
+	$data = parseConfigure(PATTERN, TEMPLATE);
+	dieIfError($data, "Cannot open configuration template");
+	$confData = parseConfigure(PATTERN_SHORT, $conf);
+	$errors = array();
+	foreach($data as $name => $value){
+		switch($value['type']){
+			case 'filepath':
+				$folder = $value['value'];
+				if(!@file_exists($folder))
+            		if(!mkdir($folder, 0777, true)){
+            			array_push($errors, "cannot access folder '" . $folder . "' close '" . $name . "'");
+            			$ok = false;
+            		}
+				break;
+			case 'integer':
+				if($value['value'] != '0' && !intval($value['value'])){
+					array_push($errors, "invalid number '" . $value['value'] . "' close '" . $name . "'");
+					$ok = false;
+				}
+				break;
+			case 'filenameOrNull':
+				$file = $value['value'];
+				if(!@file_exists($file)){
+					$folder = basename($file);
+            		if(!file_exists($folder) && !mkdir($folder, 0777, true)){
+            			array_push($errors, "cannot access folder '" . $folder . "' close '" . $name . "'");
+            			$ok = false;
+            		}
+				}
+				break;
+			case 'filename':
+				$file = $value['value'];
+				if(!@file_exists($file)){
+            			array_push($errors, "cannot access file '" . $file . "' close '" . $name . "'");
+            			$ok = false;
+            		}
+				break;
+			case 'executable':
+				$file = $value['value'];
+				if(!@is_executable($file)){
+            			array_push($errors, "cannot access file '" . $file . "' close '" . $name . "'");
+            			$ok = false;
+            		}
+				break;
+			case 'URL':
+				if(!is_string($value['value'])){
+					$errors[] = ("invalid type '" . $value['value'] . "' close '" . $name . "'");
+					$ok = false;
+				}
+				break;
+			case 'string':
+				if(!is_string($value['value'])){
+					$errors[] = ("invalid type '" .  $value['value'] . "' close '" . $name . "'");
+					$ok = false;
+				}
+				break;
+			case 'password':
+				if(!is_string($value['value'])){
+					$errors[] = ("invalid type '" . $value['value'] . "' close '" . $name . "'");
+					$ok = false;
+				}
+				break;
+			case 'boolean':
+				$t = $value['value'];
+				if(strtolower($t) != 'false' && strtolower($t) != 'true'){
+					$errors[] = ("invalid type '" . $value . "' close '" . $name . "'");
+					$ok = false;
+				}
+				break;
+			default:
+				$errors[] = ("Unknown type:'" . $value[type] . "' close '" . $name . "'");
+				$ok = FALSE;
+			}
+		}
+	return $errors;
+	}
+
+
 
 ?>
   

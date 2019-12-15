@@ -21,32 +21,37 @@
 *LICENSE*************************************************************************/
 /*DESCRIPTION********************************************************************
 
-configuration.php 
-    Qmics general settings
+configuration.php.template 
+    Qmics general settings, from this file it is generated 'configuration.php' via Qmics configuration functionality when configuration.php is missing, updated or certain error situations - or when admin selects "configure" from "Settings".
 
 Known issues: 
 *None
  
 *DESCRIPTION*********************************************************************/ 
 
+//PLEASE DO NOT EDIT if this file is "configuration.php", only the "configuration.php.template.txt", if needed!!! 
+
 ini_set('display_errors', 'On');
 ini_set('auto_detect_line_endings', true);
 error_reporting(E_ALL | E_STRICT);  
 
-define('LIBRARY', "../../myprivate_library");
-define('COVER_CACHE',"../../myprivate_library/cache/covers");
-define('CURRENT_CACHE',"../../myprivate_library/cache/current");
-define('ERROR_LOG',"../../myprivate_library/errorlog.txt");
-define('COVER_WIDTH', 200);
-define('COVER_HEIGHT', 200);
-define('LOGOUT_PAGE',"../qmics.html");
-define('MIN_PASSWORDLEN', 5);
-define('ZIPCMD', "/usr/syno/bin/zip");
-define('UNZIPCMD', "/usr/syno/bin/unzip");
-define('UNRARCMD', "/usr/syno/bin/unrar");
-define('DB_ADDRESS', 'localhost');
-define('DB_USER', 'qmics');
-define('DB_PASSWD', 'qmicspasswd');
-define('WARNINGS_FATAL', false);
-define('DEBUG_LOG', true);
+define('LIBRARY', "../../myprivate_library");			//Path to library folder. (Please do not edit)
+define('COVER_CACHE', "../../myprivate_library/cache/covers");			//Path to cover page cache. (Please do not edit)
+define('CURRENT_CACHE', "../../myprivate_library/cache/current");			//Path to content cache. (Please do not edit)
+define('ERROR_LOG', "../../myprivate_library/errorlog.txt");			//File to store error log information. (Please do not edit)
+define('COVER_WIDTH', 200);			//Width of cover pages in library view. (Please do not edit)
+define('COVER_HEIGHT', 200);			//Height of cover pages in library view. (Please do not edit)
+define('LOGOUT_PAGE', "../qmics.html");			//Page next after logout. (Please do not edit)
+define('MIN_PASSWORDLEN', 5);			//Minimum length of an accepted password. (Please do not edit)
+define('ZIPCMD', "/usr/bin/zip");			//Path to 'zip' command. (Please do not edit)
+define('UNZIPCMD', "/usr/bin/7z");			//Path to 'unzip' command. (Please do not edit)
+define('UNRARCMD', "/usr/bin/unrar");			//Path to 'unrar' command. (Please do not edit)
+define('DB_ADDRESS', 'localhost');			//Address of MariaDB/MySQL database ('localhost') for a local machine (Please do not edit)
+define('DB_USER', 'root');			//Username of MariaDB/MySQL database used (Please do not edit)
+define('DB_PASSWD', '');			//Password of MariaDB/MySQL database used (Please do not edit)
+define('WARNINGS_FATAL', false);			//Set 'true' if system warnings aborts execution. (Please do not edit)
+define('DEBUG_LOG', "");			//Path if certain information is logged into log file or "" not do logging. (Please do not edit)
+define('DEFAULT_CACHE_MAX', 500);			//Set cache size (in GB) (Please do not edit)
+define('CACHE_MAX_LIMIT', 1000);			//Set maximum cache size that can be set (in GB) (Please do not edit)
 ?>
+

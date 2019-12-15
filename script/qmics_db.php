@@ -288,7 +288,6 @@ function createUserTable($db){
   `userid` INT NOT NULL AUTO_INCREMENT,
   `currentcomicid` INT NOT NULL,
   `currentcomicpage` INT NOT NULL,
-  `comicsize` INT NOT NULL DEFAULT 0,
    PRIMARY KEY(`userid`)
   )");
   

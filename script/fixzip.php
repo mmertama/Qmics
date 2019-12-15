@@ -103,7 +103,7 @@ function fixzip($name, $newname, $folder, $strict){
 
 function archiveType($filename){
     $handle = fopen($filename, 'r');
-    fatalIfFalse($filename, "Cannot open $filename");
+    fatalIfFalse($handle, "Cannot open $filename");
     $id = fread($handle, 16);
     fclose($handle);
     if(strncmp($id ,'PK', 2) == 0)

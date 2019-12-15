@@ -58,31 +58,42 @@ function uncompress($filename, $outfolder, $index){
         $commands['type'] = "rar";
         $commands['list'] = UNRARCMD . " lb  -- \"$filename\"";
         $commands['fileselect'] = "/(.*\.(?:png|jpg))$/i";
-        $commands['preexract'] = UNRARCMD . " x -- \"$filename\"";
+        $commands['preextract'] = UNRARCMD . " x -- \"$filename\"";
         $archiveName = $pathInfo['filename'];
         $outfolder .= "/$archiveName";
-        $commands['postexract'] = "\"$outfolder\"";
+        $commands['postextract'] = "\"$outfolder\"";
         if(!file_exists($outfolder))
             fatalIfFalse(mkdir($outfolder, 0777, true), "cannot create folder $outfolder");
         return extractTo($filename, $index, $outfolder, $commands);
     }
     elseif($ext == "cbz" || $ext == "zip"){
-        $commands['type'] = "zip";
-        $commands['list'] = UNZIPCMD . " -l -qq \"$filename\"";
-        $commands['fileselect'] = "/\s*\d+\s+\d+\-\d+\-\d+\s+\d+:\d+\s+(.*\.(?:jpg|png))$/i";
-        $commands['preexract'] = UNZIPCMD . " -qq \"$filename\"";
-        $commands['postexract'] = "-d \"$outfolder\"";
+		$zname =  basename(UNZIPCMD);
+    	if($zname == 'unzip'){
+        	$commands['type'] = "zip";
+        	$commands['list'] = UNZIPCMD . " -l -qq \"$filename\"";
+        	$commands['fileselect'] = "/\s*\d+\s+\d+\-\d+\-\d+\s+\d+:\d+\s+(.*\.(?:jpg|png))$/i";
+        	$commands['preextract'] = UNZIPCMD . " -qq \"$filename\"";
+        	$commands['postextract'] = "-d \"$outfolder\"";
+    	} else if($zname = '7z'){
+    		$commands['type'] = "zip";
+    		$commands['list'] = UNZIPCMD . " l \"$filename\"";
+    		$commands['fileselect'] = "/[0-9-]+\s+\d+:\d+:\d+\s+[A.]+\s+\d+\s+\d+\s+(.*\.(?:png|jpg))$/i";
+    		$commands['preextract'] = UNZIPCMD . " x  \"$filename\"";
+    		$commands['postextract'] = "-o\"$outfolder\" -y";
+    		}
         return extractTo($filename, $index, $outfolder, $commands);
     }
     $defErr = "Unknown file:\"$filename\"";
     return FALSE;
 }
 
+
 function extractTo($filename, $index, $outfolder, $commands, $force = FALSE){
     global $defErr;
     $deflateArchive = "";
     $fullname = "";
 	$cached = true;
+	
     
     if(!file_exists($filename)){
         $defErr = "File not found: $filename";
@@ -107,7 +118,7 @@ function extractTo($filename, $index, $outfolder, $commands, $force = FALSE){
         }
     
         if(count($jpgs) <= $index || count($jpgs) == 0){
-            if(replaceWithValidChars($filename, false) != $fullname && archiveType($filename) != ''){
+            if(replaceWithValidChars($filename, false) != $filename && archiveType($filename) != ''){
                 $defErr = "badfilename";
                 return FALSE;
             }
@@ -127,12 +138,13 @@ function extractTo($filename, $index, $outfolder, $commands, $force = FALSE){
             $jpgname = $jpgs[$index]; 
             fatalIfFalse($jpgname, "unfortunate error at " . $jpgs[$index]);
             $first = " \"$jpgname\" ";
-            $deflateArchive = $commands['preexract'] . $first . $commands['postexract'] . " 2>&1 ";
+            $deflateArchive = $commands['preextract'] . $first . $commands['postextract'] . " 2>&1 ";
+            //echo("<h3>" . $deflateArchive . "</h3>");
             unset($output);
         }
     }
     else{
-        $deflateArchive = $commands['preexract'] . " " . $commands['postexract'] . " 2>&1 ";
+        $deflateArchive = $commands['preextract'] . " " . $commands['postextract'] . " 2>&1 ";
     }
     
     if(strlen($deflateArchive) > 0){
@@ -147,7 +159,7 @@ function extractTo($filename, $index, $outfolder, $commands, $force = FALSE){
                 $defErr = "invalidfilename";
                 return FALSE;
             }
-            $defErr = "Deflating \"$fullname\” from \"$filename\" failed (dump follows):" . join("\n", $output);
+            $defErr = "Deflating<br>\"$fullname\"<br>from<br>\"$filename\"<br>failed (dump follows):" . join("<br>\n", $output);
             return FALSE;
         }
         if($index < 0)

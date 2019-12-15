@@ -2,6 +2,11 @@
 <html>
 	<head>
 	<meta charset="utf-8">
+	<meta http-equiv="cache-control" content="max-age=0" />
+	<meta http-equiv="cache-control" content="no-cache" />
+	<meta http-equiv="expires" content="0" />
+	<meta http-equiv="expires" content="Tue, 01 Jan 1980 1:00:00 GMT" />
+	<meta http-equiv="pragma" content="no-cache" />
     <style type="text/css" title="currentStyle">
 			@import "../style/qmics.css";
             .src {font: small courier;}
@@ -40,25 +45,29 @@ Known issues:
 *None
  
 *DESCRIPTION*********************************************************************/ 
-
-if(!file_exists('configuration.php')){
-	require_once('qmics_configure.php');
-	configure("No configuration found, please configure", NULL);
-	exit();
-}
-
 require_once 'utils.php';
+require_once('qmics_configure.php');
+if(!file_exists('configuration.php')){
+	configure("No configuration found, please configure", NULL, NULL);
+	exit();
+} 
+
+$errors = validateConfiguration('configuration.php');
+if(!$errors){
+	configure("Invalid configuration, please reconfigure", $errors, 'configuration.php');
+	exit();
+} 
+
+
 require_once 'admin.php';
 require_once 'configuration.php';
 
  if(!session_start()){
      fatal("No session started<BR/>");
  }
-
 $db = openDb();
 if(!$db){
-	require_once('qmics_configure.php');
-	configure("Problems with database, please check settings", NULL);
+	configure("Problems with database, please check settings", NULL, 'configuration.php');
 	exit();
 	}
 //DB is open
@@ -75,8 +84,7 @@ if(isset($_POST['action']))
 
 if($user == 'admin'){
 	if(filemtime('configuration.php') < filemtime('configuration.php.template')){
-		require_once('qmics_configure.php');
-		configure("Configuration settings updated, please check", "configuration.php");
+		configure("Configuration settings updated, please check", NULL, "configuration.php");
 		exit();
 	}
 	if(!hasUsers($db)){

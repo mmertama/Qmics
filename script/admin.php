@@ -192,7 +192,7 @@ function createComicDb($db){
 
 function getCacheSize($db){
 	$res = $db->query("SELECT `cachesize` FROM `comicsDB`");
-	fatalIfFalse("Cache size failed:" . $db->error);
+	fatalIfFalse($res, "Cache size failed:" . $db->error);
 	$data = $res->fetch_array(MYSQLI_ASSOC);
     $size = $data['cachesize'];
 	$res->close();

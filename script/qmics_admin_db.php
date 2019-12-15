@@ -103,7 +103,7 @@ if($adminId){
         clearCaches($db);
     }
     elseif(isset($_POST['action']) && $_POST['action'] == 'recoverdata'){
-        $data = preg_split('/\|/', $_POST['recoveries']);
+        $data = preg_split('/\|/', $_POST['recoverdata']);
         recover($data);
     }
     elseif(isset($_POST['action']) && $_POST['action'] == 'upload'){
@@ -192,6 +192,8 @@ function doAdminUpdate($db, $userId, $values){
     
     while($userData = $comicUserResult->fetch_array(MYSQLI_ASSOC)){
         $access = accessFromBytes($userData['access']);
+       
+        
         $comicId = $userData['uniqcomicid'];
         
         $pos = positionOf($comicId, $update);
@@ -358,11 +360,12 @@ function regenComics($db){
 
 function DeleteOrphanRecords($db){
     $count = 0;
-    $comicsQuery = $db->query("SELECT `sourceurl`,`comicid` FROM `comics`");
+    $comicsQuery = $db->query("SELECT `sourceurl`,`comicid`, `coverimage` FROM `comics`");
     fatalIfFalse($comicsQuery, $db->error);
     while($data = $comicsQuery->fetch_array(MYSQLI_ASSOC)){
         $sourceUrl = longPath($data['sourceurl']);
-        if(!file_exists($sourceUrl)){
+        $coverUrl = longPath($data['coverimage']);
+        if(!file_exists($sourceUrl) || !file_exists($coverUrl)){
             $id = $data['comicid'];
             $e = $db->query("DELETE FROM `comics` WHERE `comicid`='$id'");
             warnIfFalse($e, $db->error);
@@ -374,6 +377,7 @@ function DeleteOrphanRecords($db){
     $comicsQuery->close();
     return $count;
 }
+
 
 
 function generateComicDb($db){
@@ -391,11 +395,12 @@ function generateComicDb($db){
 
     
     $db->autocommit(FALSE);
+    
 
-    foreach($filenames as $filename){
-        
+    foreach($filenames as $filename){    
         $sourceUrl = $db->real_escape_string(shortPath($filename));
         $comicsQuery = $db->query("SELECT `comicid` FROM `comics` WHERE `sourceurl` = '$sourceUrl'");
+            
         if($comicsQuery != false && $comicsQuery->num_rows > 0){
             $comicsQuery->close();
             continue;
@@ -407,6 +412,7 @@ function generateComicDb($db){
         $archivepath = replaceWithValidChars($pathInfo['filename'], true);
         
         $data = uncompress($filename, COVER_CACHE . "/" . $archivepath , 0);
+    
         
         if(!$data){
             if(compressError() == "invalidfilename"){
@@ -416,8 +422,8 @@ function generateComicDb($db){
                 $r[] =  "invalidfilename";
                 $r[] = $filename;
                 $hidden = toRecoveryData($r);
-                $info = array("Broken file: \"$filename\"", null);
-                addForm("admin", "Fix it", $info, "recoverdata", $hidden);
+                $info = "Broken file: \"$filename\"";
+                addFormExtra("admin", "Fix it", NULL, "recoverdata", $hidden, $info, NULL, NULL);
                 continue;
             }
             $newname = "";
@@ -430,22 +436,25 @@ function generateComicDb($db){
             }
             if(compressError() == "badfilename"){
                 $newname = replaceWithValidChars($filename, false);
-                $info = array("File: \"$filename\" has invalid characters", null);
+                $info = "File: \"$filename\" has invalid characters";
             }
             if(compressError() == "badfiletype" || compressError() == "badfilename"){
-                
-                if($type != ''){
-                    $recoveries[] = "renamefile";
-                    $recoveries[] = $filename;
-                    $recoveries[] = $newname;
-                    $r = array();
-                    $r[] = "renamefile";
-                    $r[] = $filename;
-                    $r[] = $newname;
-                    $hidden = toRecoveryData($r);
-                    addForm("admin", "Fix it", $info, "recoverdata", $hidden);
-                    continue;
-                }
+                if(is_writeable($filename)){
+	                if($type != ''){
+	                    $recoveries[] = "renamefile";
+	                    $recoveries[] = $filename;
+	                    $recoveries[] = $newname;
+	                    $r = array();
+	                    $r[] = "renamefile";
+	                    $r[] = $filename;
+	                    $r[] = $newname;
+	                    $hidden = toRecoveryData($r);
+	                    addFormExtra("admin", "Fix it", NULL, "recoverdata", $hidden, $info, NULL, NULL);
+	                    continue;
+	                }
+                } else {
+                	warn($file . ". Cannot recover without write access");
+                	}
             }
             warnIfFalse($data, "compress error:" . compressError(), function() use ($recoveries, $db){
                 if(WARNINGS_FATAL){
@@ -461,6 +470,7 @@ function generateComicDb($db){
         $pages = $data['pages'];
         $coverimage = $data['fullname'];
         
+        
         $size = resize($coverimage, COVER_WIDTH, COVER_HEIGHT);
         $size = warnIfFalse($size, "resize error:" . resizeError(), function() use ($recoveries, $db){
             if(WARNINGS_FATAL){
@@ -470,7 +480,6 @@ function generateComicDb($db){
             });
          if(!$size)
             continue;
-        
         
         $name = $db->real_escape_string($name);
         $coverimage = $db->real_escape_string(shortPath($coverimage));
@@ -493,19 +502,18 @@ function generateComicDb($db){
     return $recoveries;
 }
 
-
 function toRecoveryData($array){
     $recoveryData = join("|", $array);
-    $hidden = array("admin", "user", $recoveryData, "recoveries");
+    $hidden = array("admin", "user", $recoveryData, 'recoverdata');
     return $hidden;
 }
 
 function addLastLine($recoveries){
     $hidden = toRecoveryData($recoveries);
-    $info = array("Several errors", null);
-    addForm("admin", "Fix them all", $info, "recoverdata", $hidden);
-    
+    $info = "Several errors";
+    addFormExtra("admin", "Fix all", NULL, "recoverdata", $hidden, $info, NULL, NULL);
 }
+
 
 function createLinks($db){
     $db->autocommit(FALSE);
@@ -601,6 +609,26 @@ debug_log("UPDATE DONE");
 }
 
 
+function reRename($oldname, $newname){
+	if(dirname($oldname) != dirname($newname) && rename($oldname, $newname)){
+		$newroot = reRename(dirname($oldname), dirname($newname));
+		if(!$newroot)
+			return FALSE;
+		$oldname = dirname($newroot) . "/" . basename($oldname);
+		}
+	if($oldname != $newname){
+		exec("mv $oldname, $newname", $out, $err);
+	}
+	if(!file_exists($newname) && !@rename($oldname, $newname)){
+		if(!is_writable($oldname))
+			warn("Cannot rename:" . $oldname . " to " . $newname . " access denied");
+		else
+			warn("Cannot rename:" . $oldname . " to " . $newname . " " . join("<br>", $out));
+		return FALSE;
+	}
+	return $newname;
+	}
+
 function recover($commands){
     $index = 0;
     $count = count($commands);
@@ -612,10 +640,11 @@ function recover($commands){
             $fixCount++;
         }
         elseif($commands[$index] === "renamefile"){
-            $type = archiveType($commands[$index + 1]); 
-            rename($commands[$index + 1], $commands[$index + 2]);
+        	$oldname = $commands[$index + 1];
+        	$newname = $commands[$index + 2];
+        	if(reRename($oldname, $newname))
+            	$fixCount++;
             $index += 3;
-            $fixCount++;
         }
         else{
             fatal("Unknown recovery " . $commands[$index] . "($index)");
@@ -623,7 +652,7 @@ function recover($commands){
     }
     htmlEcho ("$fixCount fixes, please update the database.<br/>");
     $hidden = array("admin", "user");
-    addForm("admin", "Generate Comics DB", NULL, "gencomicsdb", $hidden);
+    addFormExtra("admin", "Generate Comics DB", NULL, "gencomicsdb", $hidden, NULL, NULL, NULL);
 }
                            
 
@@ -633,7 +662,7 @@ function htmlEcho($str){
 
 function configureFromSettings($db){
 	require_once('qmics_configure.php');
-	configure("Qmics Configuration", "configuration.php");
+	configure("Qmics Configuration", NULL, "configuration.php");
 	exit();
 }    
 
